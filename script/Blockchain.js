@@ -1,9 +1,14 @@
 const LevelSandbox = require('./LevelSandbox.js');
 const Block = require('./Block.js');
-const util = require('util')
-// const web3 = require('./Contracts.js');
+const timeConverter = require('./Contracts.js');
+// setting up web3 instance
 const Web3 = require('web3');
 const web3 = new Web3("ws://85.214.224.112:8547");
+// const web3 = new Web3('https://0001.volta.rpc.eth.events');
+
+function getTime() {
+    console.log(timeConverter.timeConverter(new Date().getTime().toString().slice(0, -3)));
+}
 
 class Blockchain {
     constructor() {
@@ -12,7 +17,14 @@ class Blockchain {
 
     async addBlock() {
         let newBlock = new Block.Block();
-        for (let i = 0; i < 641768; i++) {
+        // get latest block
+        let latestBlock = await web3.eth.getBlockNumber();
+        // get block count
+        let lastSavedBlock = await this.getBlocksCount();
+        console.log('Start Block: ' + lastSavedBlock + '\n' + 'End Block: ' + latestBlock);
+        console.log('Start syncing time:');
+        getTime();
+        for (let i = lastSavedBlock; i < latestBlock; i++) {
             const block = await web3.eth.getBlock(i, true);
             newBlock.author = block.author;
             newBlock.difficulty = block.difficulty;
@@ -36,16 +48,69 @@ class Blockchain {
             newBlock.transactions = block.transactions;
             await this.db.addLevelDBData(newBlock.number, JSON.stringify(newBlock));
         }
+        console.log('End syncing time:');
+        getTime();
     }
 
-    async getBlock(height) {
-        return JSON.parse(await this.db.getLevelDBData(height));
+    // get total blocks in the levelDB
+    async getBlocksCount() {
+        return await this.db.getBlocksCount();
     }
+
+    // get block by block number
+    async getBlock(number) {
+        return JSON.parse(await this.db.getLevelDBData(number));
+    }
+
+    // validate block by block number
+    async validateBlock(number) {
+        // get block
+        let block = await this.getBlock(number);
+        // get parent block
+        let nextBlock = await this.getBlock(number + 1);
+        return new Promise((resolve, reject) => {
+
+
+            // get block hash
+            let blockHash = block.hash;
+
+            // get parent block hash
+            let parentBlockHash = nextBlock.parentHash;
+            // compare hashes
+            if (blockHash === parentBlockHash) {
+                console.log('Block No. ' + number + ' is valid');
+                resolve(true);
+            } else {
+                console.log('Block No. ' + number + ' invalid hash:\n' + blockHash + '-' + parentBlockHash);
+                resolve(false);
+            }
+        })
+    }
+
+    // Validate Blockchain
+    async validateChain() {
+
+        let errorLog = [];
+        const blocksCount = await this.getBlocksCount() - 1;
+        for (var i = 0; i < blocksCount; i++) {
+            // check block validation
+            if (!await this.validateBlock(i)) {
+                errorLog.push(i);
+            }
+        }
+        return new Promise((resolve, reject) => {
+            if (errorLog.length > 0) {
+                console.log('Total errors = ' + errorLog.length);
+                console.log('Blocks: ' + errorLog);
+                resolve(false);
+            } else {
+                console.log('No error found, the chain is valid!');
+                resolve(true);
+            }
+        })
+    }
+
 }
-let blockchain = new Blockchain();
-//blockchain.addBlock();
+module.exports.Blockchain = Blockchain;
 
-blockchain.db.getBlocksCount().then(console.log);
-blockchain.getBlock(11263).then(obj => {
-    console.log(obj.timestamp)
-});
+
