@@ -15,6 +15,16 @@ class Blockchain {
         this.db = new LevelSandbox.LevelSandbox();
     }
 
+    // get total blocks in the levelDB
+    async getBlocksCount() {
+        return await this.db.getBlocksCount();
+    }
+
+    // get block by block number
+    async getBlock(number) {
+        return JSON.parse(await this.db.getLevelDBData(number));
+    }
+
     async addBlock() {
         let newBlock = new Block.Block();
         // get latest block
@@ -50,16 +60,6 @@ class Blockchain {
         }
         console.log('End syncing time:');
         getTime();
-    }
-
-    // get total blocks in the levelDB
-    async getBlocksCount() {
-        return await this.db.getBlocksCount();
-    }
-
-    // get block by block number
-    async getBlock(number) {
-        return JSON.parse(await this.db.getLevelDBData(number));
     }
 
     // validate block by block number
