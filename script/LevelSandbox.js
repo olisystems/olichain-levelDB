@@ -1,5 +1,5 @@
 const level = require('level');
-const chainDB = '../chaindata';
+const chainDB = './private-chain';
 
 class LevelSandbox {
     constructor() {
