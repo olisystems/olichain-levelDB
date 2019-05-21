@@ -5,3 +5,7 @@ chaindata
 voltaChain
 
 private-chain
+
+auw-chain
+
+*.csv
