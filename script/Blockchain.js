@@ -3,13 +3,16 @@ const Block = require('./Block.js');
 const timeConverter = require('./Contracts.js');
 // setting up web3 instance
 const Web3 = require('web3');
-const web3 = new Web3("ws://85.214.224.112:8547");
-// const web3 = new Web3('https://0001.volta.rpc.eth.events');
+// const web3 = new Web3("ws://85.214.224.112:8547");
+//const web3 = new Web3('https://0001.volta.rpc.eth.events');
+const web3 = new Web3('http://ec2-18-194-52-184.eu-central-1.compute.amazonaws.com:8545');
 
+// get current time
 function getTime() {
     console.log(timeConverter.timeConverter(new Date().getTime().toString().slice(0, -3)));
 }
 
+// blockchain class
 class Blockchain {
     constructor() {
         this.db = new LevelSandbox.LevelSandbox();
@@ -32,8 +35,8 @@ class Blockchain {
         // get block count
         let lastSavedBlock = await this.getBlocksCount();
         console.log('Start Block: ' + lastSavedBlock + '\n' + 'End Block: ' + latestBlock);
-        console.log('Start syncing time:');
-        getTime();
+        console.time('Time Taken');
+        //getTime();
         for (let i = lastSavedBlock; i < latestBlock; i++) {
             const block = await web3.eth.getBlock(i, true);
             newBlock.author = block.author;
@@ -58,8 +61,7 @@ class Blockchain {
             newBlock.transactions = block.transactions;
             await this.db.addLevelDBData(newBlock.number, JSON.stringify(newBlock));
         }
-        console.log('End syncing time:');
-        getTime();
+        console.timeEnd('Time Taken');
     }
 
     // validate block by block number
@@ -69,11 +71,8 @@ class Blockchain {
         // get parent block
         let nextBlock = await this.getBlock(number + 1);
         return new Promise((resolve, reject) => {
-
-
             // get block hash
             let blockHash = block.hash;
-
             // get parent block hash
             let parentBlockHash = nextBlock.parentHash;
             // compare hashes
@@ -89,7 +88,6 @@ class Blockchain {
 
     // Validate Blockchain
     async validateChain() {
-
         let errorLog = [];
         const blocksCount = await this.getBlocksCount() - 1;
         for (var i = 0; i < blocksCount; i++) {
