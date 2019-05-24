@@ -1,19 +1,20 @@
 class Transaction {
     constructor() {
-        this.blockHash = '';
-        this.blockNumber = '';
-        this.chainId = '';
+        this.to = '';
         this.from = '';
+        this.blockNumber = '';
+        this.timestamp = '';
+        this.energyValue = '';
+        this.hash = '';
+        this.blockHash = '';
+        this.chainId = '';
         this.gas = '';
         this.gasPrice = '';
-        this.hash = '';
         this.input = '';
         this.nonce = '';
         this.publicKey = '';
-        this.to = '';
         this.transactionIndex = '';
         this.value = '';
-        this.timestamp = '';
     }
 }
 
