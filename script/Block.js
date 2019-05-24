@@ -3,7 +3,6 @@ class Block {
         this.author = '';
         this.difficulty = '';
         this.extraData = '';
-        this.extraData = '';
         this.gasLimit = '';
         this.gasUsed = '';
         this.hash = '';
