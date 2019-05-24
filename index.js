@@ -9,75 +9,72 @@ const web3 = new Web3('http://ec2-18-194-52-184.eu-central-1.compute.amazonaws.c
 
 // config to write csv
 const fs = require('fs');
-var csvWriter = require('csv-write-stream')
-var writer = csvWriter()
-writer.pipe(fs.createWriteStream('output.csv', { flags: 'a' }))
+const csvWriter = require('csv-write-stream')
+const writer = csvWriter()
+const writableStream = fs.createWriteStream("auw_energyValues.csv", { flags: 'a' });
+writableStream.on("finish", () => {
+    console.log("DONE!");
+});
+writer.pipe(writableStream)
 
 /**
  * add block method
  */
 // blockchain.addBlock();
 
-/**
- * get block
- */
-
-let count = 0;
-const test = '0x7d60e22577ee617d2473fde6a85e8556db297483';
+const address = '0x7d60e22577ee617d2473fde6a85e8556db297483';
 async function addTransaction() {
-    let newTransaction = new Transaction();
-
-    for (i = 0; i < 100000; i++) {
-        blockchain.getBlock(i).then(block => {
-            if (block.transactions.length != 0) {
-                block.transactions.forEach(transaction => {
-                    if (transaction.to = test) {
-                        let functionHash = transaction.input.slice(2, 10);
-                        if (functionHash = 'fbab8a38') {
-                            newTransaction.blockHash = transaction.blockHash;
-                            newTransaction.blockNumber = transaction.blockNumber;
-                            newTransaction.chainId = transaction.chainId;
-                            newTransaction.from = transaction.from;
-                            newTransaction.gas = transaction.gas;
-                            newTransaction.gasPrice = transaction.gasPrice;
-                            newTransaction.hash = transaction.hash;
-                            newTransaction.input = transaction.input;
-                            newTransaction.nonce = transaction.nonce;
-                            newTransaction.publicKey = transaction.publicKey;
-                            newTransaction.to = transaction.to;
-                            newTransaction.transactionIndex = transaction.transactionIndex;
-                            newTransaction.value = transaction.value;
-                            newTransaction.timestamp = block.timestamp;
-
-                            // write csv
-                            writer.write(newTransaction)
-                        }
-                    }
-
-                });
-
-            } else {
-                console.log('No Tx');
+    let count = 0;
+    // create new transaction object
+    var newTransaction = new Transaction();
+    console.time('Time Taken');
+    for (i = 0; i < 3022696; i++) {
+        const block = await blockchain.getBlock(i);
+        block.transactions.forEach(transaction => {
+            var functionHash = transaction.input.slice(2, 10);
+            if (functionHash === 'fbab8a38') {
+                newTransaction.to = transaction.to;
+                newTransaction.from = transaction.from;
+                newTransaction.blockNumber = transaction.blockNumber;
+                newTransaction.timestamp = timeConverter.timeConverter(block.timestamp);
+                newTransaction.energyValue = web3.utils.toDecimal("0x" + transaction.input.slice(transaction.input.length - 6, transaction.input.length));
+                newTransaction.blockHash = transaction.blockHash;
+                newTransaction.chainId = transaction.chainId;
+                newTransaction.gas = transaction.gas;
+                newTransaction.gasPrice = transaction.gasPrice;
+                newTransaction.hash = transaction.hash;
+                newTransaction.input = transaction.input;
+                newTransaction.nonce = transaction.nonce;
+                newTransaction.publicKey = transaction.publicKey;
+                newTransaction.transactionIndex = transaction.transactionIndex;
+                newTransaction.value = transaction.value;
+                // write csv
+                count++;
+                writer.write(newTransaction);
             }
-        })
+        });
     }
+    await writer.end();
+    await console.log('Total Records Written: ' + count);
+    console.timeEnd('Time Taken');
 }
 
 addTransaction();
 
 /**
- * write csv
- */
-// fastcsv
-//     .write(data, { headers: true })
-//     .pipe(ws).on('finish', () => {
-//         console.log('done')
-//     });
-
-/**
  * get block count
  */
 // blockchain.getBlocksCount().then(console.log);
+
+/**
+ * get block
+ */
+
+// blockchain.getBlock(255247).then(block => {
+//     block.transactions.forEach(tx => {
+//         console.log(tx.input)
+//     });
+// });
 
 /**
  * validate block
